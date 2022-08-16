@@ -2,10 +2,10 @@
 // OpenZeppelin Contracts (last updated v4.6.0) (governance/utils/Votes.sol)
 pragma solidity ^0.8.0;
 
-import "../../utils/Context.sol";
-import "../../utils/Counters.sol";
-import "../../utils/Checkpoints.sol";
-import "../../utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Counters.sol";
+import "@openzeppelin/contracts/utils/Checkpoints.sol";
+import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "./IVotes.sol";
 
 /**
@@ -103,7 +103,7 @@ abstract contract Votes is IVotes, Context, EIP712 {
     function delegate_amount(address delegatee, uint256 amount) public virtual override {
         address account = _msgSender();
         require(_getVotingUnits(account) >= amount, "Votes: votes to delegate exceed voting power.");
-        _delegate_amount(account, delegatee);
+        _delegate_amount(account, delegatee, amount);
     }
 
     /**
