@@ -90,15 +90,24 @@ abstract contract Votes is IVotes, Context, EIP712 {
     }
 
     /**
-     * @dev Delegates votes from the sender to `delegatee`.
+     * @dev Delegates all the votes from the sender to `delegatee`.
      */
     function delegate(address delegatee) public virtual override {
         address account = _msgSender();
         _delegate(account, delegatee);
     }
+    
+    /**
+     * @dev Delegates a certain amount of votes from the sender to `delegatee`.
+     */
+    function delegate_amount(address delegatee, uint256 amount) public virtual override {
+        address account = _msgSender();
+        require(_getVotingUnits(account) >= amount, "Votes: votes to delegate exceed voting power.");
+        _delegate_amount(account, delegatee);
+    }
 
     /**
-     * @dev Delegates votes from signer to `delegatee`.
+     * @dev Delegates all the votes from signer to `delegatee`.
      */
     function delegateBySig(
         address delegatee,
@@ -118,6 +127,31 @@ abstract contract Votes is IVotes, Context, EIP712 {
         require(nonce == _useNonce(signer), "Votes: invalid nonce");
         _delegate(signer, delegatee);
     }
+    
+    /**
+     * @dev Delegates a certain amount of votes of votes from signer to `delegatee`.
+     */
+    function delegateBySig_amount(
+        address delegatee,
+        uint256 amount,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) public virtual override {
+        require(block.timestamp <= expiry, "Votes: signature expired");
+        require(_getVotingUnits(_msgSender()) >= amount, "Votes: votes to delegate exceed voting power.");
+        address signer = ECDSA.recover(
+            _hashTypedDataV4(keccak256(abi.encode(_DELEGATION_TYPEHASH, delegatee, nonce, expiry))),
+            v,
+            r,
+            s
+        );
+        require(nonce == _useNonce(signer), "Votes: invalid nonce");
+        _delegate_amount(signer, delegatee, amount);
+    }
+
 
     /**
      * @dev Delegate all of `account`'s voting units to `delegatee`.
@@ -130,6 +164,19 @@ abstract contract Votes is IVotes, Context, EIP712 {
 
         emit DelegateChanged(account, oldDelegate, delegatee);
         _moveDelegateVotes(oldDelegate, delegatee, _getVotingUnits(account));
+    }
+    
+    /**
+     * @dev Delegate a certain amount of `account`'s voting units to `delegatee`.
+     *
+     * Emits events {DelegateChanged} and {DelegateVotesChanged}.
+     */
+    function _delegate_amount(address account, address delegatee, uint256 amount) internal virtual {
+        address oldDelegate = delegates(account);
+        _delegation[account] = delegatee;
+
+        emit DelegateChanged(account, oldDelegate, delegatee);
+        _moveDelegateVotes(oldDelegate, delegatee, amount);
     }
 
     /**
