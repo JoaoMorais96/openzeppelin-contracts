@@ -48,10 +48,28 @@ interface IVotes {
     function delegate(address delegatee) external;
 
     /**
+     * @dev Delegates a certain amount of votes from the sender to `delegatee`.
+     */
+    function delegate_amount(address delegatee, uint256 amount) external;
+    
+    /**
      * @dev Delegates votes from signer to `delegatee`.
      */
     function delegateBySig(
         address delegatee,
+        uint256 nonce,
+        uint256 expiry,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    /**
+     * @dev Delegates a certain amount of votes of votes from signer to `delegatee`.
+     */
+    function delegateBySig_amount(
+        address delegatee,
+        uint256 amount,
         uint256 nonce,
         uint256 expiry,
         uint8 v,
